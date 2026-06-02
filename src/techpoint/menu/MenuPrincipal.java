@@ -9,6 +9,8 @@ import techpoint.modelo.ProductoTecnologico;
 import techpoint.modelo.Smartphone;
 import techpoint.servicio.CotizacionManual;
 
+import techpoint.persistencia.ProductoDAO;
+import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -24,21 +26,46 @@ public class MenuPrincipal {
 
     private void inicializarSistema() {
         try {
-            CotizacionManual cotizacion = new CotizacionManual(1180.00);
+            CotizacionManual cotizacion = new CotizacionManual(1420.00);
             gestor = new GestorRentabilidad(cotizacion);
-            gestor.actualizarCotizacionCache(1180.00);
-            gestor.agregarCanal(new CanalVenta(1, "Marketplace", 12.00));
-            gestor.agregarCanal(new CanalVenta(2, "Mercado Libre", 17.00));
-            gestor.agregarCanal(new CanalVenta(3, "Redes Sociales", 5.00));
-            gestor.agregarProducto(new Smartphone(1, "iPhone 15 128GB", 650.00, 25.00, "Apple", 128));
-            gestor.agregarProducto(new Smartphone(2, "Samsung Galaxy S24", 550.00, 25.00, "Samsung", 256));
-            gestor.agregarProducto(new Consola(3, "PlayStation 5", 450.00, 20.00, "Sony", "9na generacion"));
-            gestor.agregarProducto(new Accesorio(4, "Sony WH-1000XM5", 280.00, 30.00, "Audio", "Auriculares inalambricos de alta fidelidad"));
-            gestor.agregarProducto(new Accesorio(5, "DJI Mini 4 Pro", 760.00, 35.00, "Hogar y Tecnologia", "Drone plegable con camara 4K"));
-            System.out.println("Sistema TechPoint iniciado. Cotizacion: $1.180,00 | Productos: 5 | Canales: 3");
-        } catch (ProductoExcepcion e) {
-            System.out.println("[ERROR] " + e.getMessage());
+            gestor.actualizarCotizacionCache(1420.00);
+
+            ProductoDAO dao = new ProductoDAO();
+            if (dao.verificarConexion()) {
+                System.out.println("  Conexion MySQL: ACTIVA");
+                ArrayList<techpoint.modelo.ProductoTecnologico> productos = dao.cargarProductos();
+                ArrayList<techpoint.modelo.CanalVenta> canales = dao.cargarCanales();
+                if (!productos.isEmpty() && !canales.isEmpty()) {
+                    for (techpoint.modelo.ProductoTecnologico p : productos) gestor.agregarProducto(p);
+                    for (techpoint.modelo.CanalVenta c : canales) gestor.agregarCanal(c);
+                    System.out.println("  Datos cargados desde MySQL.");
+                } else {
+                    System.out.println("  MySQL conectado pero sin datos. Cargando datos de prueba...");
+                    cargarDatosPrueba();
+                }
+            } else {
+                System.out.println("  Conexion MySQL: NO DISPONIBLE - usando datos en memoria.");
+                cargarDatosPrueba();
+            }
+
+            System.out.println("  Cotizacion inicial: USD 1 = $1.420,00 ARS");
+            System.out.println("  Productos: " + gestor.getCatalogo().size()
+                + " | Canales: " + gestor.getCanales().size());
+
+        } catch (techpoint.excepcion.ProductoExcepcion e) {
+            System.out.println("[ERROR en inicializacion] " + e.getMessage());
         }
+    }
+
+    private void cargarDatosPrueba() throws techpoint.excepcion.ProductoExcepcion {
+        gestor.agregarCanal(new techpoint.modelo.CanalVenta(1, "Marketplace", 12.00));
+        gestor.agregarCanal(new techpoint.modelo.CanalVenta(2, "Mercado Libre", 17.00));
+        gestor.agregarCanal(new techpoint.modelo.CanalVenta(3, "Redes Sociales", 5.00));
+        gestor.agregarProducto(new techpoint.modelo.Smartphone(1, "iPhone 15 128GB", 650.00, 25.00, "Apple", 128));
+        gestor.agregarProducto(new techpoint.modelo.Smartphone(2, "Samsung Galaxy S24", 550.00, 25.00, "Samsung", 256));
+        gestor.agregarProducto(new techpoint.modelo.Consola(3, "PlayStation 5", 450.00, 20.00, "Sony", "9na generacion"));
+        gestor.agregarProducto(new techpoint.modelo.Accesorio(4, "Sony WH-1000XM5", 280.00, 30.00, "Audio", "Auriculares inalambricos de alta fidelidad"));
+        gestor.agregarProducto(new techpoint.modelo.Accesorio(5, "DJI Mini 4 Pro", 760.00, 35.00, "Hogar y Tecnologia", "Drone plegable con camara 4K"));
     }
 
     public void ejecutar() {
@@ -157,7 +184,10 @@ public class MenuPrincipal {
             scanner.nextLine();
             System.out.println("  Tipo: 1. Smartphone  2. Consola  3. Accesorio");
             System.out.print("  Opcion: "); int tipo = scanner.nextInt(); scanner.nextLine();
-            int nuevoId = gestor.getCatalogo().size() + 1;
+            int nuevoId = 1;
+            for (techpoint.modelo.ProductoTecnologico p : gestor.getCatalogo()) {
+                if (p.getId() >= nuevoId) nuevoId = p.getId() + 1;
+            }
             ProductoTecnologico nuevo = null;
             if (tipo == 1) {
                 System.out.print("  Marca: "); String marca = scanner.nextLine();
