@@ -105,6 +105,32 @@ public class ProductoDAO {
         }
     }
 
+    /**
+     * Inserta producto con nombre descriptivo completo para el TP4.
+     * Usa PreparedStatement para prevenir SQL Injection.
+     */
+    public void insertarProductoCompleto(String nombre, String descripcion,
+                                          double costoUSD, double costoARS,
+                                          double margen, int idCategoria)
+            throws ProductoExcepcion {
+        String sql = "INSERT INTO producto (nombre, descripcion, costo_usd, costo_ars, " +
+                     "margen_seguridad, activo, id_categoria) VALUES (?, ?, ?, ?, ?, TRUE, ?)";
+        try {
+            Connection con = ConexionMySQL.obtenerConexion();
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, nombre);
+            ps.setString(2, descripcion != null ? descripcion : "");
+            ps.setDouble(3, costoUSD);
+            ps.setDouble(4, costoARS);
+            ps.setDouble(5, margen);
+            ps.setInt(6, idCategoria);
+            ps.executeUpdate();
+            ps.close();
+        } catch (SQLException e) {
+            throw new ProductoExcepcion("Error al insertar producto completo: " + e.getMessage());
+        }
+    }
+
     // CU003 - Baja logica en MySQL
     public void darDeBajaProducto(int idProducto) throws ProductoExcepcion {
         String sql = "UPDATE producto SET activo = FALSE WHERE id_producto = ?";
@@ -123,7 +149,7 @@ public class ProductoDAO {
 
     // CU001 - Registrar cotizacion en tipo_cambio
     public int registrarCotizacion(double valorUSD) throws ProductoExcepcion {
-        String sql = "INSERT INTO tipo_cambio (valor_usd, fecha_hora, fuente, validado) VALUES (?, ?, 'Carga manual TP3', TRUE)";
+        String sql = "INSERT INTO tipo_cambio (valor_usd, fecha_hora, fuente, validado) VALUES (?, ?, 'Sistema TechPoint', TRUE)";
         try {
             Connection con = ConexionMySQL.obtenerConexion();
             PreparedStatement ps = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);

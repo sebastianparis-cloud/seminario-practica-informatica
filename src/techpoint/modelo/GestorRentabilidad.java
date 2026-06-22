@@ -155,6 +155,45 @@ public class GestorRentabilidad {
         this.cotizacionCache = valor;
     }
 
+    /**
+     * Genera un resumen de precios del catalogo activo en arreglo nativo double[].
+     *
+     * Uso de arreglo nativo (double[]) como complemento al ArrayList,
+     * segun requisito del TP4: "arreglos y ArrayList de forma complementaria".
+     *
+     * @param valorUSD cotizacion vigente
+     * @return double[] con precio sugerido de cada producto activo en orden
+     * @throws ProductoExcepcion si la cotizacion es invalida
+     */
+    public double[] generarArregloPrecios(double valorUSD) throws ProductoExcepcion {
+        if (valorUSD <= 0)
+            throw new ProductoExcepcion("La cotizacion debe ser mayor a cero.");
+
+        int cantActivos = 0;
+        for (ProductoTecnologico p : catalogo) {
+            if (p.isActivo()) cantActivos++;
+        }
+
+        double[] precios = new double[cantActivos];
+
+        int indice = 0;
+        for (ProductoTecnologico p : catalogo) {
+            if (p.isActivo()) {
+                precios[indice] = p.calcularPrecioSugerido(valorUSD);
+                indice++;
+            }
+        }
+
+        return precios;
+    }
+
+    /**
+     * Elimina un canal del ArrayList en memoria (para sincronizar con baja en MySQL).
+     */
+    public void removerCanalPorId(int idCanal) {
+        canales.removeIf(c -> c.getId() == idCanal);
+    }
+
     public ArrayList<ProductoTecnologico> getCatalogo() { return catalogo; }
     public ArrayList<CanalVenta> getCanales() { return canales; }
     public double getCotizacionCache() { return cotizacionCache; }

@@ -40,4 +40,14 @@ public class CanalVenta {
     public String getNombre() { return nombre; }
     public double getComisionPct() { return comisionPct; }
     public boolean isActivo() { return activo; }
+
+    // Setter de comision para modificacion en TP4
+    public void setComisionPct(double comisionPct) throws ProductoExcepcion {
+        if (comisionPct < 0 || comisionPct >= 100)
+            throw new ProductoExcepcion("La comision debe estar entre 0% y 100%.");
+        this.comisionPct = comisionPct;
+    }
+
+    // Baja logica para canal
+    public void darDeBaja() { this.activo = false; }
 }
